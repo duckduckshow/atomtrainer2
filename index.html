@@ -1,275 +1,261 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Atom-Quiz – Erkennen statt Bauen</title>
-  <style>
-    :root{
-      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-      background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
-      color:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:1rem}
-    .app{
-      width:100%; max-width:1200px;
-      background: rgba(15, 23, 42, 0.95);
-      border-radius: 1.5rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,.5);
-      padding: 1.25rem;
-      display:grid;
-      grid-template-columns: minmax(0,1.05fr) minmax(0,1.4fr);
-      gap: 1rem;
-    }
-    @media (max-width: 900px){
-      .app{grid-template-columns:1fr}
-    }
-    h1{margin:.2rem 0 .35rem;font-size:1.55rem;color:#f9fafb}
-    .subtitle{color:#9ca3af;font-size:.92rem;margin-bottom:.8rem}
-    .card{
-      background: rgba(15, 23, 42, 0.95);
-      border-radius: 1rem;
-      padding: 1rem 1.05rem;
-      border: 1px solid rgba(148,163,184,.25);
-    }
-    .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-    .pill{
-      border:1px solid rgba(148,163,184,.4);
-      color:#cbd5f5;
-      border-radius:999px;
-      padding:.15rem .55rem;
-      font-size:.78rem;
-    }
-    .pill strong{color:#e5e7eb}
-    .tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0 .2rem}
-    .tab{
-      border:none;border-radius:999px;
-      padding:.45rem .8rem;
-      cursor:pointer;
-      background:#0f172a;
-      border:1px solid rgba(148,163,184,.5);
-      color:#e5e7eb;
-    }
-    .tab.active{
-      background:#1d4ed8;
-      border-color: rgba(59,130,246,.8);
-    }
-    .question{
-      font-size:1.02rem;
-      margin:.35rem 0 .6rem;
-    }
-    .controls{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap:.5rem;
-      margin-top:.6rem;
-    }
-    button{
-      border-radius:999px;border:none;
-      padding:.45rem .75rem;
-      font-size:.92rem;
-      cursor:pointer;
-      background:#1d4ed8;color:#e5e7eb;
-    }
-    button.secondary{
-      background:#0f172a;
-      border:1px solid rgba(148,163,184,.5);
-    }
-    .feedback{margin-top:.55rem;min-height:1.2em}
-    .feedback.ok{color:#22c55e}
-    .feedback.err{color:#f97316}
-    .atom-area{display:flex;justify-content:center;align-items:center;gap:1rem}
-    .atom-visual{
-      position:relative;
-      width:280px;height:280px;
-      border-radius:50%;
-      background:#020617;
-      box-shadow:0 0 30px rgba(59,130,246,.4);
-    }
-    .nucleus-circle{
-      position:absolute;left:50%;top:50%;
-      transform:translate(-50%,-50%);
-      width:86px;height:86px;border-radius:50%;
-      border:2px solid rgba(248,250,252,.85);
-    }
-    .shell{
-      position:absolute;border-radius:50%;
-      border:1px dashed rgba(148,163,184,.6);
-    }
-    .electron{
-      position:absolute;width:10px;height:10px;border-radius:50%;
-      background:#38bdf8;
-      transform:translate(-50%,-50%);
-    }
-    .proton-dot{
-      position:absolute;width:8px;height:8px;border-radius:50%;
-      background:#f97316;
-      transform:translate(-50%,-50%);
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Atom-Quiz – Erkennen statt Bauen</title>
+
+<style>
+:root{
+  font-family: system-ui, sans-serif;
+  background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
+  color:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:1rem}
+
+.app{
+  width:100%; max-width:1200px;
+  background:#020617;
+  border-radius:1.5rem;
+  padding:1.2rem;
+  display:grid;
+  grid-template-columns:1.1fr 1.4fr;
+  gap:1rem;
+}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+
+.card{
+  background:#0f172a;
+  border-radius:1rem;
+  padding:1rem;
+  border:1px solid rgba(148,163,184,.3);
+}
+
+.tabs{display:flex;gap:.5rem;margin-bottom:.6rem}
+.tab{
+  padding:.4rem .8rem;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.4);
+  background:#020617;
+  color:#e5e7eb;
+  cursor:pointer;
+}
+.tab.active{background:#1d4ed8}
+
+.question{margin:.6rem 0}
+
+.controls{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:.5rem;
+}
+
+button{
+  padding:.45rem;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#1d4ed8;
+  color:white;
+}
+button.secondary{background:#020617;border:1px solid #64748b}
+button.good{background:#22c55e;color:#022c22}
+button.bad{background:#dc2626}
+
+.feedback{min-height:1.2em;margin-top:.5rem}
+
+.timer{
+  margin-left:auto;
+  font-size:1.2rem;
+}
+.timer b{color:#facc15}
+
+.atom-area{display:flex;gap:1rem;align-items:center}
+.atom-visual{
+  width:280px;height:280px;border-radius:50%;
+  background:#020617;
+  position:relative;
+}
+.nucleus-circle{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  width:90px;height:90px;border-radius:50%;
+  border:2px solid white;
+}
+.shell{position:absolute;border:1px dashed #64748b;border-radius:50%}
+.electron{width:10px;height:10px;background:#38bdf8;border-radius:50%;position:absolute}
+.proton-dot{width:8px;height:8px;background:#f97316;border-radius:50%;position:absolute}
+
+.numbers div{margin:.2rem 0}
+.hide-numbers .numbers{display:none}
+</style>
 </head>
 
 <body>
 <div class="app">
 
-<div class="card">
-  <h1>Atom-Quiz</h1>
+<!-- LEFT -->
+<div class="card" id="leftCard">
+<h1>Atom-Quiz</h1>
 
-  <div class="tabs">
-    <button class="tab active" id="tab1">Level 1</button>
-    <button class="tab" id="tab2">Level 2</button>
-    <button class="tab" id="tab3">Level 3</button>
-  </div>
-
-  <div class="question" id="questionText"></div>
-
-  <div id="level2Area">
-    <div class="controls">
-      <button id="l2Atom" class="secondary">Atom (neutral)</button>
-      <button id="l2Ion" class="secondary">Ion</button>
-      <button id="l2Pos" class="secondary" disabled>positiv (+)</button>
-      <button id="l2Neg" class="secondary" disabled>negativ (−)</button>
-    </div>
-  </div>
-
-  <div class="feedback" id="feedback"></div>
-  <button id="next">Nächste Aufgabe</button>
+<div class="tabs">
+<button class="tab active" id="tab1">Level 1</button>
+<button class="tab" id="tab2">Level 2</button>
+<button class="tab" id="tab3">Level 3</button>
+<div class="timer" id="timerPill" style="display:none">⏱ <b id="timer">15</b></div>
 </div>
 
-<div class="card">
-  <div class="atom-area">
-    <div class="atom-visual" id="atomVisual">
-      <div class="nucleus-circle"></div>
-    </div>
-  </div>
+<div class="question" id="questionText"></div>
+
+<div id="level1Area"></div>
+
+<div id="level2Area" style="display:none">
+<div class="controls">
+<button id="l2Atom" class="secondary">Atom</button>
+<button id="l2Ion" class="secondary">Ion</button>
+<button id="l2Pos" class="secondary" disabled>+</button>
+<button id="l2Neg" class="secondary" disabled>−</button>
+</div>
+</div>
+
+<div class="feedback" id="feedback"></div>
+<button id="next" class="good">Weiter</button>
+</div>
+
+<!-- RIGHT -->
+<div class="card" id="rightCard">
+<div class="atom-area">
+<div class="atom-visual" id="atomVisual">
+<div class="nucleus-circle"></div>
+</div>
+<div class="numbers">
+<div>p⁺ = <span id="pCount">0</span></div>
+<div>e⁻ = <span id="eCount">0</span></div>
+<div>Ladung = <span id="cCount">0</span></div>
+</div>
+</div>
 </div>
 
 </div>
 
 <script>
-const TASKS = [
-  {Z:11,e:10},
-  {Z:8,e:10},
-  {Z:17,e:18},
-  {Z:1,e:0}
-];
-
-let index=0, locked=false;
-let Z=0,e=0;
-
-const l2Atom=document.getElementById("l2Atom");
-const l2Ion=document.getElementById("l2Ion");
-const l2Pos=document.getElementById("l2Pos");
-const l2Neg=document.getElementById("l2Neg");
-const feedback=document.getElementById("feedback");
-
-function chargeOf(Z,e){return Z-e}
-
-function renderAtom(Z, e){
-  const v = document.getElementById("atomVisual");
-
-  // alte Teilchen entfernen
-  v.querySelectorAll(".shell,.electron,.proton-dot").forEach(x=>x.remove());
-
-  const cx = 140, cy = 140;
-
-  /* ---------- Elektronen (Hülle) ---------- */
-  const shells = [60, 100];
-  let remaining = e;
-
-  shells.forEach(r=>{
-    const shell = document.createElement("div");
-    shell.className = "shell";
-    shell.style.width = shell.style.height = (2*r)+"px";
-    shell.style.left = (cx-r)+"px";
-    shell.style.top  = (cy-r)+"px";
-    v.appendChild(shell);
-
-    const n = Math.min(remaining, 8);
-    remaining -= n;
-
-    for(let i=0;i<n;i++){
-      const a = 2*Math.PI*i/n;
-      const el = document.createElement("div");
-      el.className = "electron";
-      el.style.left = (cx + r*Math.cos(a))+"px";
-      el.style.top  = (cy + r*Math.sin(a))+"px";
-      v.appendChild(el);
-    }
-  });
-
-  /* ---------- Protonen (Kern) ---------- */
-  const maxVisible = 16;
-  const visible = Math.min(Z, maxVisible);
-  const innerR = 14;
-  const outerR = 26;
-
-  if(visible <= 8){
-    for(let i=0;i<visible;i++){
-      const a = 2*Math.PI*i/visible;
-      const p = document.createElement("div");
-      p.className = "proton-dot";
-      p.style.left = (cx + outerR*Math.cos(a))+"px";
-      p.style.top  = (cy + outerR*Math.sin(a))+"px";
-      v.appendChild(p);
-    }
-  } else {
-    for(let i=0;i<8;i++){
-      const a = 2*Math.PI*i/8;
-      const p = document.createElement("div");
-      p.className = "proton-dot";
-      p.style.left = (cx + innerR*Math.cos(a))+"px";
-      p.style.top  = (cy + innerR*Math.sin(a))+"px";
-      v.appendChild(p);
-    }
-    for(let i=0;i<visible-8;i++){
-      const a = 2*Math.PI*i/(visible-8);
-      const p = document.createElement("div");
-      p.className = "proton-dot";
-      p.style.left = (cx + outerR*Math.cos(a))+"px";
-      p.style.top  = (cy + outerR*Math.sin(a))+"px";
-      v.appendChild(p);
-    }
-  }
-}
-
-
-function renderTask(){
-  locked=false;
-  feedback.textContent="";
-
-  /* ✅ EINZIGER BUGFIX */
-  l2Atom.disabled=false;
-  l2Ion.disabled=false;
-
-  l2Pos.disabled=true;
-  l2Neg.disabled=true;
-
-  const t=TASKS[index];
-  Z=t.Z; e=t.e;
-  renderAtom(Z,e);
-}
-
-function solve(atomIon,sign){
-  if(locked)return;
-  locked=true;
-  const c=chargeOf(Z,e);
-  const ok=(c===0&&atomIon==="atom")||(c>0&&sign==="pos")||(c<0&&sign==="neg");
-  feedback.textContent=ok?"Richtig":"Falsch";
-}
-
-l2Atom.onclick=()=>solve("atom");
-l2Ion.onclick=()=>{l2Pos.disabled=false;l2Neg.disabled=false};
-l2Pos.onclick=()=>solve("ion","pos");
-l2Neg.onclick=()=>solve("ion","neg");
-
-document.getElementById("next").onclick=()=>{
-  index=(index+1)%TASKS.length;
-  renderTask();
+/* ================== STATE ================== */
+const state={
+level:1,index:0,locked:false,timer:15,timerId:null,Z:0,e:0
 };
 
-renderTask();
+const TASKS1=[
+{Z:11,e:11},{Z:11,e:10},{Z:8,e:10}
+];
+const TASKS2=[
+{Z:11,e:11},{Z:11,e:10},{Z:8,e:10}
+];
+
+/* ================== ATOM ================== */
+function renderAtom(Z,e){
+const v=document.getElementById("atomVisual");
+v.querySelectorAll(".shell,.electron,.proton-dot").forEach(x=>x.remove());
+const cx=140,cy=140;
+
+/* shells + electrons */
+const shells=[60,100];
+let rem=e;
+shells.forEach(r=>{
+const s=document.createElement("div");
+s.className="shell";
+s.style.width=s.style.height=(2*r)+"px";
+s.style.left=(cx-r)+"px";
+s.style.top=(cy-r)+"px";
+v.appendChild(s);
+const n=Math.min(rem,8); rem-=n;
+for(let i=0;i<n;i++){
+const a=2*Math.PI*i/n;
+const el=document.createElement("div");
+el.className="electron";
+el.style.left=(cx+r*Math.cos(a))+"px";
+el.style.top=(cy+r*Math.sin(a))+"px";
+v.appendChild(el);
+}
+});
+
+/* protons */
+for(let i=0;i<Math.min(Z,12);i++){
+const a=2*Math.PI*i/Math.min(Z,12);
+const p=document.createElement("div");
+p.className="proton-dot";
+p.style.left=(cx+25*Math.cos(a))+"px";
+p.style.top=(cy+25*Math.sin(a))+"px";
+v.appendChild(p);
+}
+
+pCount.textContent=Z;
+eCount.textContent=e;
+cCount.textContent=Z-e;
+}
+
+/* ================== TIMER ================== */
+function startTimer(){
+clearInterval(state.timerId);
+state.timer=15;
+timer.textContent=state.timer;
+state.timerId=setInterval(()=>{
+state.timer--;
+timer.textContent=state.timer;
+if(state.timer<=0){
+clearInterval(state.timerId);
+state.locked=true;
+feedback.textContent="Zeit abgelaufen";
+}
+},1000);
+}
+
+/* ================== LEVELS ================== */
+function loadTask(){
+state.locked=false;
+feedback.textContent="";
+document.getElementById("rightCard").classList.toggle("hide-numbers",state.level===2);
+
+if(state.level===1){
+const t=TASKS1[state.index%TASKS1.length];
+state.Z=t.Z;state.e=t.e;
+questionText.textContent="Was siehst du?";
+level1Area.innerHTML="";
+["Atom","Ion"].forEach(ans=>{
+const b=document.createElement("button");
+b.textContent=ans;
+b.onclick=()=>{if(!state.locked){feedback.textContent="OK";state.locked=true}};
+level1Area.appendChild(b);
+});
+}
+
+if(state.level===2){
+const t=TASKS2[state.index%TASKS2.length];
+state.Z=t.Z;state.e=t.e;
+questionText.textContent="Atom oder Ion?";
+l2Atom.disabled=false;
+l2Ion.disabled=false;
+l2Pos.disabled=true;
+l2Neg.disabled=true;
+startTimer();
+}
+
+renderAtom(state.Z,state.e);
+}
+
+/* ================== EVENTS ================== */
+tab1.onclick=()=>{state.level=1;tab1.classList.add("active");tab2.classList.remove("active");loadTask()};
+tab2.onclick=()=>{state.level=2;tab2.classList.add("active");tab1.classList.remove("active");loadTask()};
+
+l2Atom.onclick=()=>{if(!state.locked){feedback.textContent="Atom gewählt";state.locked=true;clearInterval(state.timerId)}};
+l2Ion.onclick=()=>{l2Pos.disabled=false;l2Neg.disabled=false};
+l2Pos.onclick=()=>{if(!state.locked){feedback.textContent="Ion +";state.locked=true;clearInterval(state.timerId)}};
+l2Neg.onclick=()=>{if(!state.locked){feedback.textContent="Ion −";state.locked=true;clearInterval(state.timerId)}};
+
+next.onclick=()=>{state.index++;loadTask()};
+
+loadTask();
 </script>
 </body>
 </html>
+
