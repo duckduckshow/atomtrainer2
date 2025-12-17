@@ -27,7 +27,6 @@
     }
     h1{margin:.2rem 0 .35rem;font-size:1.55rem;color:#f9fafb}
     .subtitle{color:#9ca3af;font-size:.92rem;margin-bottom:.8rem}
-
     .card{
       background: rgba(15, 23, 42, 0.95);
       border-radius: 1rem;
@@ -56,14 +55,10 @@
       background:#1d4ed8;
       border-color: rgba(59,130,246,.8);
     }
-
-    .panel-title{font-weight:600;margin-bottom:.35rem;color:#e5e7eb}
     .question{
-      font-size:1.02rem; line-height:1.35;
+      font-size:1.02rem;
       margin:.35rem 0 .6rem;
-      color:#f3f4f6;
     }
-
     .controls{
       display:grid;
       grid-template-columns: repeat(2, minmax(0,1fr));
@@ -81,46 +76,16 @@
       background:#0f172a;
       border:1px solid rgba(148,163,184,.5);
     }
-    button.good{background:#22c55e;color:#022c22}
-    button.bad{background:#dc2626;color:#fff;border:1px solid #7f1d1d}
-
-    .feedback{
-      margin-top:.55rem;
-      min-height:1.2em;
-      font-size:.98rem;
-    }
+    .feedback{margin-top:.55rem;min-height:1.2em}
     .feedback.ok{color:#22c55e}
     .feedback.err{color:#f97316}
-
-    .stats{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap:.45rem;
-      margin-top:.5rem;
-    }
-    .stat{
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: .75rem;
-      padding:.45rem .6rem;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-    }
-    .stat .k{font-size:.7rem;text-transform:uppercase;color:#9ca3af}
-    .stat .v{font-size:1.05rem;font-weight:700;color:#facc15}
-
-    .timer{
-      margin-left:auto;
-      font-variant-numeric: tabular-nums;
-      color:#e5e7eb;
-    }
-    .timer b{color:#facc15}
-
     .atom-area{display:flex;justify-content:center;align-items:center;gap:1rem}
     .atom-visual{
       position:relative;
       width:280px;height:280px;
       border-radius:50%;
       background:#020617;
-      box-shadow: 0 0 30px rgba(59,130,246,.4);
+      box-shadow:0 0 30px rgba(59,130,246,.4);
     }
     .nucleus-circle{
       position:absolute;left:50%;top:50%;
@@ -131,7 +96,6 @@
     .shell{
       position:absolute;border-radius:50%;
       border:1px dashed rgba(148,163,184,.6);
-      pointer-events:none;
     }
     .electron{
       position:absolute;width:10px;height:10px;border-radius:50%;
@@ -143,28 +107,19 @@
       background:#f97316;
       transform:translate(-50%,-50%);
     }
-
-    .hide-numbers .numbers{display:none}
   </style>
 </head>
 
 <body>
 <div class="app">
 
-<div class="card" id="leftCard">
-  <h1>Atom-Quiz: Erkennen statt Bauen</h1>
+<div class="card">
+  <h1>Atom-Quiz</h1>
 
   <div class="tabs">
     <button class="tab active" id="tab1">Level 1</button>
     <button class="tab" id="tab2">Level 2</button>
     <button class="tab" id="tab3">Level 3</button>
-  </div>
-
-  <div class="row">
-    <div class="pill">Punkte: <strong id="score">0</strong></div>
-    <div class="pill timer" id="timerPill" style="display:none;">
-      Zeit: <b id="timer">15</b>s
-    </div>
   </div>
 
   <div class="question" id="questionText"></div>
@@ -179,18 +134,13 @@
   </div>
 
   <div class="feedback" id="feedback"></div>
-  <button id="next" class="good">Nächste Aufgabe</button>
+  <button id="next">Nächste Aufgabe</button>
 </div>
 
-<div class="card" id="rightCard">
+<div class="card">
   <div class="atom-area">
     <div class="atom-visual" id="atomVisual">
       <div class="nucleus-circle"></div>
-    </div>
-    <div class="numbers">
-      <div>p⁺ = <span id="pCount">0</span></div>
-      <div>e⁻ = <span id="eCount">0</span></div>
-      <div>Ladung = <span id="cCount">0</span></div>
     </div>
   </div>
 </div>
@@ -205,42 +155,47 @@ const TASKS = [
   {Z:1,e:0}
 ];
 
-let index=0;
-let locked=false;
-let score=0;
+let index=0, locked=false;
 let Z=0,e=0;
-let timer=15,timerId=null;
 
 const l2Atom=document.getElementById("l2Atom");
 const l2Ion=document.getElementById("l2Ion");
 const l2Pos=document.getElementById("l2Pos");
 const l2Neg=document.getElementById("l2Neg");
 const feedback=document.getElementById("feedback");
-const timerEl=document.getElementById("timer");
-const timerPill=document.getElementById("timerPill");
 
 function chargeOf(Z,e){return Z-e}
 
-function startTimer(){
-  clearInterval(timerId);
-  timer=15;
-  timerEl.textContent=timer;
-  timerId=setInterval(()=>{
-    timer--;
-    timerEl.textContent=timer;
-    if(timer<=0){
-      clearInterval(timerId);
-      locked=true;
-      feedback.textContent="Zeit abgelaufen";
+function renderAtom(Z,e){
+  const v=document.getElementById("atomVisual");
+  v.querySelectorAll(".shell,.electron,.proton-dot").forEach(x=>x.remove());
+  const cx=140,cy=140;
+  const shells=[60,100];
+  let rem=e;
+  shells.forEach(r=>{
+    const s=document.createElement("div");
+    s.className="shell";
+    s.style.width=s.style.height=(2*r)+"px";
+    s.style.left=(cx-r)+"px";
+    s.style.top=(cy-r)+"px";
+    v.appendChild(s);
+    const n=Math.min(rem,8); rem-=n;
+    for(let i=0;i<n;i++){
+      const a=2*Math.PI*i/n;
+      const el=document.createElement("div");
+      el.className="electron";
+      el.style.left=(cx+r*Math.cos(a))+"px";
+      el.style.top=(cy+r*Math.sin(a))+"px";
+      v.appendChild(el);
     }
-  },1000);
+  });
 }
 
 function renderTask(){
   locked=false;
   feedback.textContent="";
 
-  // 🔧 BUGFIX: Atom & Ion wieder aktivieren
+  /* ✅ EINZIGER BUGFIX */
   l2Atom.disabled=false;
   l2Ion.disabled=false;
 
@@ -249,22 +204,15 @@ function renderTask(){
 
   const t=TASKS[index];
   Z=t.Z; e=t.e;
-
-  timerPill.style.display="inline-flex";
-  startTimer();
+  renderAtom(Z,e);
 }
 
 function solve(atomIon,sign){
   if(locked)return;
   locked=true;
-  clearInterval(timerId);
-
   const c=chargeOf(Z,e);
-  const ok=(c===0 && atomIon==="atom")||(c>0&&sign==="pos")||(c<0&&sign==="neg");
-
-  if(ok){score++;feedback.textContent="Richtig";}
-  else{feedback.textContent="Falsch";}
-  document.getElementById("score").textContent=score;
+  const ok=(c===0&&atomIon==="atom")||(c>0&&sign==="pos")||(c<0&&sign==="neg");
+  feedback.textContent=ok?"Richtig":"Falsch";
 }
 
 l2Atom.onclick=()=>solve("atom");
