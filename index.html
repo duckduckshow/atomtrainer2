@@ -166,30 +166,74 @@ const feedback=document.getElementById("feedback");
 
 function chargeOf(Z,e){return Z-e}
 
-function renderAtom(Z,e){
-  const v=document.getElementById("atomVisual");
+function renderAtom(Z, e){
+  const v = document.getElementById("atomVisual");
+
+  // alte Teilchen entfernen
   v.querySelectorAll(".shell,.electron,.proton-dot").forEach(x=>x.remove());
-  const cx=140,cy=140;
-  const shells=[60,100];
-  let rem=e;
+
+  const cx = 140, cy = 140;
+
+  /* ---------- Elektronen (Hülle) ---------- */
+  const shells = [60, 100];
+  let remaining = e;
+
   shells.forEach(r=>{
-    const s=document.createElement("div");
-    s.className="shell";
-    s.style.width=s.style.height=(2*r)+"px";
-    s.style.left=(cx-r)+"px";
-    s.style.top=(cy-r)+"px";
-    v.appendChild(s);
-    const n=Math.min(rem,8); rem-=n;
+    const shell = document.createElement("div");
+    shell.className = "shell";
+    shell.style.width = shell.style.height = (2*r)+"px";
+    shell.style.left = (cx-r)+"px";
+    shell.style.top  = (cy-r)+"px";
+    v.appendChild(shell);
+
+    const n = Math.min(remaining, 8);
+    remaining -= n;
+
     for(let i=0;i<n;i++){
-      const a=2*Math.PI*i/n;
-      const el=document.createElement("div");
-      el.className="electron";
-      el.style.left=(cx+r*Math.cos(a))+"px";
-      el.style.top=(cy+r*Math.sin(a))+"px";
+      const a = 2*Math.PI*i/n;
+      const el = document.createElement("div");
+      el.className = "electron";
+      el.style.left = (cx + r*Math.cos(a))+"px";
+      el.style.top  = (cy + r*Math.sin(a))+"px";
       v.appendChild(el);
     }
   });
+
+  /* ---------- Protonen (Kern) ---------- */
+  const maxVisible = 16;
+  const visible = Math.min(Z, maxVisible);
+  const innerR = 14;
+  const outerR = 26;
+
+  if(visible <= 8){
+    for(let i=0;i<visible;i++){
+      const a = 2*Math.PI*i/visible;
+      const p = document.createElement("div");
+      p.className = "proton-dot";
+      p.style.left = (cx + outerR*Math.cos(a))+"px";
+      p.style.top  = (cy + outerR*Math.sin(a))+"px";
+      v.appendChild(p);
+    }
+  } else {
+    for(let i=0;i<8;i++){
+      const a = 2*Math.PI*i/8;
+      const p = document.createElement("div");
+      p.className = "proton-dot";
+      p.style.left = (cx + innerR*Math.cos(a))+"px";
+      p.style.top  = (cy + innerR*Math.sin(a))+"px";
+      v.appendChild(p);
+    }
+    for(let i=0;i<visible-8;i++){
+      const a = 2*Math.PI*i/(visible-8);
+      const p = document.createElement("div");
+      p.className = "proton-dot";
+      p.style.left = (cx + outerR*Math.cos(a))+"px";
+      p.style.top  = (cy + outerR*Math.sin(a))+"px";
+      v.appendChild(p);
+    }
+  }
 }
+
 
 function renderTask(){
   locked=false;
