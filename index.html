@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Atom-Quiz – Erkennen statt Bauen</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Atom-Quiz – Erkennen statt Bauen</title>
 
 <style>
 :root{
@@ -70,7 +70,7 @@ h1{margin:.2rem 0 .35rem;font-size:1.55rem;color:#f9fafb}
 
 .controls{
   display:grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0,1fr));
   gap:.5rem;
 }
 
@@ -96,14 +96,14 @@ button.bad{background:#dc2626;color:#fff}
 .timer{
   margin-left:auto;
   font-variant-numeric: tabular-nums;
-  font-size:1.25rem;
-  padding:.35rem .7rem;
+  font-size:1.35rem;
+  padding:.4rem .85rem;
   border-radius:999px;
-  background: rgba(250,204,21,.15);
-  border:1px solid rgba(250,204,21,.6);
+  background: rgba(250,204,21,.18);
+  border:2px solid rgba(250,204,21,.8);
 }
 .timer b{
-  font-size:1.4rem;
+  font-size:1.6rem;
   color:#facc15;
 }
 
@@ -143,8 +143,9 @@ button.bad{background:#dc2626;color:#fff}
 <div class="app">
 
 <!-- LINKS -->
-<div class="card" id="leftCard">
+<div class="card">
 <h1>Atom-Quiz: Erkennen statt Bauen</h1>
+<div class="subtitle">Erkennen von Atomen und Ionen mit sofortigem Feedback.</div>
 
 <div class="tabs">
 <button class="tab active" id="tab1">Level 1</button>
@@ -161,7 +162,9 @@ Zeit: <b id="timer">15</b>s
 
 <div class="question" id="questionText"></div>
 
-<div id="level2Area">
+<div id="level1Area"></div>
+
+<div id="level2Area" style="display:none">
 <div class="controls">
 <button id="l2Atom" class="secondary">Atom (neutral)</button>
 <button id="l2Ion" class="secondary">Ion</button>
@@ -170,12 +173,14 @@ Zeit: <b id="timer">15</b>s
 </div>
 </div>
 
+<div id="level3Area" style="display:none"></div>
+
 <div class="feedback" id="feedback"></div>
 <button id="next" class="good">Nächste Aufgabe</button>
 </div>
 
 <!-- RECHTS -->
-<div class="card hide-numbers" id="rightCard">
+<div class="card" id="rightCard">
 <div class="atom-area">
 <div class="atom-visual" id="atomVisual">
 <div class="nucleus-circle"></div>
@@ -191,27 +196,32 @@ Zeit: <b id="timer">15</b>s
 </div>
 
 <script>
+/* ========= DATEN ========= */
 const ELEMENT={
-1:{name:"Wasserstoff"},8:{name:"Sauerstoff"},
-11:{name:"Natrium"},17:{name:"Chlor"}
+1:{name:"Wasserstoff",sym:"H"},
+8:{name:"Sauerstoff",sym:"O"},
+11:{name:"Natrium",sym:"Na"},
+17:{name:"Chlor",sym:"Cl"}
 };
 
+/* ✅ LESBARE IONEN */
 function labelOf(Z,charge){
-const el=ELEMENT[Z];
-const base=el?el.name:`Element Z=${Z}`;
-if(charge===0)return base+" – neutrales Atom";
-const sign=charge>0?"+":"−";
-const mag=Math.abs(charge);
-const ch=mag===1?sign:mag+sign;
-return `${base}-Ion (${ch})`;
+  const el=ELEMENT[Z];
+  const base=el?`${el.name} (${el.sym})`:`Element Z=${Z}`;
+  if(charge===0) return base+" – neutrales Atom";
+  const sign=charge>0?"+":"−";
+  const mag=Math.abs(charge);
+  const ch=mag===1?sign:mag+sign;
+  return `${el.name}-Ion (${ch})`;
 }
 
-const TASKS=[
+const LEVEL2_TASKS=[
 {Z:11,e:10},{Z:8,e:10},{Z:17,e:18},{Z:1,e:0}
 ];
 
-let index=0,locked=false,score=0,timer=15,timerId;
-let Z,e;
+let state={
+level:2,index:0,locked:false,score:0,Z:0,e:0,timer:15,timerId:null
+};
 
 const l2Atom=document.getElementById("l2Atom");
 const l2Ion=document.getElementById("l2Ion");
@@ -224,16 +234,21 @@ const timerPill=document.getElementById("timerPill");
 function chargeOf(Z,e){return Z-e}
 
 function startTimer(){
-clearInterval(timerId);
-timer=15;timerEl.textContent=timer;
-timerId=setInterval(()=>{
-timer--;timerEl.textContent=timer;
-if(timer<=0){clearInterval(timerId);locked=true;feedback.textContent="Zeit abgelaufen";}
+clearInterval(state.timerId);
+state.timer=15;timerEl.textContent=state.timer;
+state.timerId=setInterval(()=>{
+state.timer--;timerEl.textContent=state.timer;
+if(state.timer<=0){
+clearInterval(state.timerId);
+state.locked=true;
+feedback.textContent="Zeit abgelaufen ⏱️";
+}
 },1000);
 }
 
+/* ✅ LEVEL-2-RESET FIX */
 function loadTask(){
-locked=false;
+state.locked=false;
 feedback.textContent="";
 l2Atom.disabled=false;
 l2Ion.disabled=false;
@@ -241,20 +256,20 @@ l2Pos.disabled=true;
 l2Neg.disabled=true;
 l2Atom.className=l2Ion.className=l2Pos.className=l2Neg.className="secondary";
 
-const t=TASKS[index];
-Z=t.Z;e=t.e;
+const t=LEVEL2_TASKS[state.index];
+state.Z=t.Z;state.e=t.e;
 document.getElementById("questionText").textContent="Atom oder Ion?";
 timerPill.style.display="inline-flex";
 startTimer();
 }
 
 function solve(atomIon,sign){
-if(locked)return;
-locked=true;clearInterval(timerId);
-const c=chargeOf(Z,e);
+if(state.locked)return;
+state.locked=true;clearInterval(state.timerId);
+const c=chargeOf(state.Z,state.e);
 const ok=(c===0 && atomIon==="atom")||(c>0&&sign==="pos")||(c<0&&sign==="neg");
-if(ok){score++;feedback.textContent="Richtig! ✔"}else{feedback.textContent="Falsch ❌"}
-document.getElementById("score").textContent=score;
+if(ok){state.score++;feedback.textContent="Richtig ✔"}else{feedback.textContent="Falsch ✘"}
+document.getElementById("score").textContent=state.score;
 }
 
 l2Atom.onclick=()=>solve("atom");
@@ -263,7 +278,7 @@ l2Pos.onclick=()=>solve("ion","pos");
 l2Neg.onclick=()=>solve("ion","neg");
 
 document.getElementById("next").onclick=()=>{
-index=(index+1)%TASKS.length;
+state.index=(state.index+1)%LEVEL2_TASKS.length;
 loadTask();
 };
 
