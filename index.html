@@ -1,261 +1,1014 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Atom-Quiz – Erkennen statt Bauen</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atom-Quiz – Erkennen statt Bauen</title>
+  <style>
+    :root{
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
+      color:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:1rem}
+    .app{
+      width:100%; max-width:1200px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,.5);
+      padding: 1.25rem;
+      display:grid;
+      grid-template-columns: minmax(0,1.05fr) minmax(0,1.4fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px){
+      .app{grid-template-columns:1fr}
+    }
+    h1{margin:.2rem 0 .35rem;font-size:1.55rem;color:#f9fafb}
+    .subtitle{color:#9ca3af;font-size:.92rem;margin-bottom:.8rem}
 
-<style>
-:root{
-  font-family: system-ui, sans-serif;
-  background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
-  color:#e5e7eb;
-}
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;justify-content:center;padding:1rem}
+    .card{
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 1rem;
+      padding: 1rem 1.05rem;
+      border: 1px solid rgba(148,163,184,.25);
+    }
+    .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    .pill{
+      border:1px solid rgba(148,163,184,.4);
+      color:#cbd5f5;
+      border-radius:999px;
+      padding:.15rem .55rem;
+      font-size:.78rem;
+    }
+    .pill strong{color:#e5e7eb}
+    .tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0 .2rem}
+    .tab{
+      border:none;border-radius:999px;
+      padding:.45rem .8rem;
+      cursor:pointer;
+      background:#0f172a;
+      border:1px solid rgba(148,163,184,.5);
+      color:#e5e7eb;
+      box-shadow: 0 4px 10px rgba(15,23,42,.8);
+    }
+    .tab.active{
+      background:#1d4ed8;
+      border-color: rgba(59,130,246,.8);
+    }
 
-.app{
-  width:100%; max-width:1200px;
-  background:#020617;
-  border-radius:1.5rem;
-  padding:1.2rem;
-  display:grid;
-  grid-template-columns:1.1fr 1.4fr;
-  gap:1rem;
-}
-@media(max-width:900px){.app{grid-template-columns:1fr}}
+    .panel-title{font-weight:600;margin-bottom:.35rem;color:#e5e7eb}
+    .question{
+      font-size:1.02rem; line-height:1.35;
+      margin:.35rem 0 .6rem;
+      color:#f3f4f6;
+    }
 
-.card{
-  background:#0f172a;
-  border-radius:1rem;
-  padding:1rem;
-  border:1px solid rgba(148,163,184,.3);
-}
+    .controls{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:.5rem;
+      margin-top:.6rem;
+    }
+    button{
+      border-radius:999px;border:none;
+      padding:.45rem .75rem;
+      font-size:.92rem;
+      cursor:pointer;
+      background:#1d4ed8;color:#e5e7eb;
+      display:flex;justify-content:center;align-items:center;
+      transition: transform .06s ease, box-shadow .06s ease, filter .1s ease;
+      box-shadow: 0 4px 10px rgba(15,23,42,.8);
+    }
+    button.secondary{
+      background:#0f172a;
+      border:1px solid rgba(148,163,184,.5);
+    }
+    button.good{background:#22c55e;color:#022c22}
+    button.bad{background:#dc2626;color:#fff;border:1px solid #7f1d1d}
+    button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    button:active{transform:translateY(1px) scale(.985);filter:brightness(.95)}
+    button:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
 
-.tabs{display:flex;gap:.5rem;margin-bottom:.6rem}
-.tab{
-  padding:.4rem .8rem;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,.4);
-  background:#020617;
-  color:#e5e7eb;
-  cursor:pointer;
-}
-.tab.active{background:#1d4ed8}
+    .feedback{
+      margin-top:.55rem;
+      min-height:1.2em;
+      font-size:.98rem;
+    }
+    .feedback.ok{color:#22c55e}
+    .feedback.err{color:#f97316}
 
-.question{margin:.6rem 0}
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:.45rem;
+      margin-top:.5rem;
+    }
+    .stat{
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: .75rem;
+      padding:.45rem .6rem;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+    }
+    .stat .k{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af}
+    .stat .v{font-size:1.05rem;font-weight:700;color:#facc15}
 
-.controls{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:.5rem;
-}
+    /* Atom visual */
+    .atom-area{display:flex;justify-content:center;align-items:center;gap:1rem}
+    .atom-visual{
+      position:relative;
+      width:280px;height:280px;
+      border-radius:50%;
+      background: radial-gradient(circle at center, #020617 0, #020617 45%, #020617 100%);
+      box-shadow: 0 0 30px rgba(59,130,246,.4);
+      overflow:visible;
+    }
+    .nucleus-circle{
+      position:absolute;left:50%;top:50%;
+      transform:translate(-50%,-50%);
+      width:86px;height:86px;border-radius:50%;
+      border:2px solid rgba(248,250,252,.85);
+      background:transparent;
+    }
+    .shell{
+      position:absolute;border-radius:50%;
+      border:1px dashed rgba(148,163,184,.6);
+      pointer-events:none;
+    }
+    .electron{
+      position:absolute;width:10px;height:10px;border-radius:50%;
+      background:#38bdf8; box-shadow:0 0 10px #38bdf8;
+      transform:translate(-50%,-50%);
+    }
+    .proton-dot{
+      position:absolute;width:8px;height:8px;border-radius:50%;
+      background:#f97316; box-shadow:0 0 6px #f97316;
+      transform:translate(-50%,-50%);
+    }
+    .nucleus-info{
+      min-width:160px;
+      font-size:1.02rem;
+      line-height:1.45;
+    }
+    .nucleus-info .hint{font-size:.8rem;color:#9ca3af;margin-bottom:.25rem}
+    .ptext{color:#f97316;font-weight:700;font-size:1.12rem}
+    .etext{color:#38bdf8;font-weight:700;font-size:1.12rem}
+    .ctext{color:#e5e7eb;font-weight:700}
+    .note{
+      margin-top:.55rem;
+      font-size:.86rem;
+      color:#9ca3af;
+      border:1px dashed rgba(148,163,184,.45);
+      border-radius:.75rem;
+      padding:.55rem .65rem;
+      background: rgba(15,23,42,.55);
+    }
 
-button{
-  padding:.45rem;
-  border-radius:999px;
-  border:none;
-  cursor:pointer;
-  background:#1d4ed8;
-  color:white;
-}
-button.secondary{background:#020617;border:1px solid #64748b}
-button.good{background:#22c55e;color:#022c22}
-button.bad{background:#dc2626}
+    /* Level 2: hide numbers */
+    .hide-numbers .nucleus-info .numbers{display:none}
 
-.feedback{min-height:1.2em;margin-top:.5rem}
+    /* Level 3 reason box */
+    .reason-box{
+      margin-top:.5rem;
+      padding:.6rem .65rem;
+      border-radius:.75rem;
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(2,6,23,.35);
+    }
+    .reason-box label{
+      display:flex;gap:.45rem;align-items:flex-start;
+      font-size:.92rem;color:#e5e7eb;margin:.25rem 0;
+    }
+    input[type="checkbox"]{transform: translateY(2px);}
 
-.timer{
-  margin-left:auto;
-  font-size:1.2rem;
-}
-.timer b{color:#facc15}
+    /* simple timer chip */
+    .timer{
+      margin-left:auto;
+      font-variant-numeric: tabular-nums;
+      color:#e5e7eb;
+    }
+    .timer b{color:#facc15}
 
-.atom-area{display:flex;gap:1rem;align-items:center}
-.atom-visual{
-  width:280px;height:280px;border-radius:50%;
-  background:#020617;
-  position:relative;
-}
-.nucleus-circle{
-  position:absolute;left:50%;top:50%;
-  transform:translate(-50%,-50%);
-  width:90px;height:90px;border-radius:50%;
-  border:2px solid white;
-}
-.shell{position:absolute;border:1px dashed #64748b;border-radius:50%}
-.electron{width:10px;height:10px;background:#38bdf8;border-radius:50%;position:absolute}
-.proton-dot{width:8px;height:8px;background:#f97316;border-radius:50%;position:absolute}
-
-.numbers div{margin:.2rem 0}
-.hide-numbers .numbers{display:none}
-</style>
+  </style>
 </head>
-
 <body>
-<div class="app">
+  <div class="app">
+    <!-- LEFT: quiz -->
+    <div class="card" id="leftCard">
+      <h1>Atom-Quiz: Erkennen statt Bauen</h1>
+      <div class="subtitle">
+        Du bekommst Atome/Ionen gezeigt und löst Aufgaben wie in einem Quiz. Sofortiges Feedback + Punkte.
+      </div>
 
-<!-- LEFT -->
-<div class="card" id="leftCard">
-<h1>Atom-Quiz</h1>
+      <div class="tabs">
+        <button class="tab active" id="tab1">Level 1: Was bin ich?</button>
+        <button class="tab" id="tab2">Level 2: Ion oder nicht?</button>
+        <button class="tab" id="tab3">Level 3: Fehlerdetektiv</button>
+      </div>
 
-<div class="tabs">
-<button class="tab active" id="tab1">Level 1</button>
-<button class="tab" id="tab2">Level 2</button>
-<button class="tab" id="tab3">Level 3</button>
-<div class="timer" id="timerPill" style="display:none">⏱ <b id="timer">15</b></div>
-</div>
+      <div class="row" style="margin-top:.55rem">
+        <div class="pill">Level: <strong id="levelName">Was bin ich?</strong></div>
+        <div class="pill">Aufgabe: <strong id="taskIndex">1</strong>/<strong id="taskTotal">20</strong></div>
+        <div class="pill">Punkte: <strong id="score">0</strong></div>
+        <div class="pill" id="streakPill">Serie: <strong id="streak">0</strong></div>
+        <div class="pill timer" id="timerPill" style="display:none;">Zeit: <b id="timer">15</b>s</div>
+      </div>
 
-<div class="question" id="questionText"></div>
+      <div class="question" id="questionText"></div>
 
-<div id="level1Area"></div>
+      <div id="level1Area" style="display:block;">
+        <div class="controls" id="mcqButtons"></div>
+      </div>
 
-<div id="level2Area" style="display:none">
-<div class="controls">
-<button id="l2Atom" class="secondary">Atom</button>
-<button id="l2Ion" class="secondary">Ion</button>
-<button id="l2Pos" class="secondary" disabled>+</button>
-<button id="l2Neg" class="secondary" disabled>−</button>
-</div>
-</div>
+      <div id="level2Area" style="display:none;">
+        <div class="controls">
+          <button id="l2Atom" class="secondary">Atom (neutral)</button>
+          <button id="l2Ion" class="secondary">Ion</button>
+          <button id="l2Pos" class="secondary" disabled>positiv (+)</button>
+          <button id="l2Neg" class="secondary" disabled>negativ (−)</button>
+        </div>
+        <div class="note" style="margin-top:.6rem;">
+          Level 2: Erst „Atom“ oder „Ion“. Falls „Ion“, dann zusätzlich „positiv“ oder „negativ“.
+        </div>
+      </div>
 
-<div class="feedback" id="feedback"></div>
-<button id="next" class="good">Weiter</button>
-</div>
+      <div id="level3Area" style="display:none;">
+        <div class="controls">
+          <button id="l3True" class="secondary">Stimmt</button>
+          <button id="l3False" class="secondary">Stimmt nicht</button>
+          <button id="l3Check" class="good" disabled>Prüfen</button>
+          <button id="l3Skip" class="secondary">Überspringen</button>
+        </div>
+        <div class="reason-box" id="reasonBox" style="display:none;">
+          <div style="font-size:.85rem;color:#9ca3af;margin-bottom:.35rem;">
+            Wenn „stimmt nicht“: Was stimmt nicht? (Mehrfach möglich)
+          </div>
+          <label><input type="checkbox" id="rProtons"> falsche Protonenzahl</label>
+          <label><input type="checkbox" id="rElectrons"> falsche Elektronenzahl</label>
+          <label><input type="checkbox" id="rElement"> falsches Element (falsche Z)</label>
+          <label><input type="checkbox" id="rCharge"> falsche Ladung</label>
+        </div>
+      </div>
 
-<!-- RIGHT -->
-<div class="card" id="rightCard">
-<div class="atom-area">
-<div class="atom-visual" id="atomVisual">
-<div class="nucleus-circle"></div>
-</div>
-<div class="numbers">
-<div>p⁺ = <span id="pCount">0</span></div>
-<div>e⁻ = <span id="eCount">0</span></div>
-<div>Ladung = <span id="cCount">0</span></div>
-</div>
-</div>
-</div>
+      <div class="feedback" id="feedback"></div>
 
-</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Aktuelle Ladung</div><div class="v" id="chargeStat">0</div></div>
+        <div class="stat"><div class="k">p⁺ (Protonen)</div><div class="v" id="pStat">0</div></div>
+        <div class="stat"><div class="k">e⁻ (Elektronen)</div><div class="v" id="eStat">0</div></div>
+      </div>
+
+      <div class="row" style="margin-top:.7rem">
+        <button id="next" class="good">Nächste Aufgabe</button>
+        <button id="restart" class="secondary">Level neu starten</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: atom visual -->
+    <div class="card" id="rightCard">
+      <div class="panel-title">Anzeige</div>
+      <div class="atom-area" id="atomArea">
+        <div class="atom-visual" id="atomVisual">
+          <div class="nucleus-circle"></div>
+          <!-- shells, electrons, protons via JS -->
+        </div>
+        <div class="nucleus-info" id="nucleusInfo">
+          <div class="hint">Kern / Hülle</div>
+          <div class="numbers">
+            <div class="ptext">p⁺ = <span id="pCount">0</span></div>
+            <div class="etext">e⁻ = <span id="eCount">0</span></div>
+            <div class="ctext">Ladung: <span id="cCount">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        Bitte denk daran: Atomkern und Atomhülle sind in Wirklichkeit <b>sehr weit</b> voneinander entfernt!<br/>
+        Neutronen werden hier nicht dargestellt, weil es um die <b>elektrische Ladung</b> geht.
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ================== STATE ================== */
-const state={
-level:1,index:0,locked:false,timer:15,timerId:null,Z:0,e:0
+/* ---------------------- Daten (Elemente & Labels) ---------------------- */
+
+const ELEMENT = {
+  1:{name:"Wasserstoff", sym:"H"},
+  2:{name:"Helium", sym:"He"},
+  3:{name:"Lithium", sym:"Li"},
+  4:{name:"Beryllium", sym:"Be"},
+  5:{name:"Bor", sym:"B"},
+  6:{name:"Kohlenstoff", sym:"C"},
+  7:{name:"Stickstoff", sym:"N"},
+  8:{name:"Sauerstoff", sym:"O"},
+  9:{name:"Fluor", sym:"F"},
+  10:{name:"Neon", sym:"Ne"},
+  11:{name:"Natrium", sym:"Na"},
+  12:{name:"Magnesium", sym:"Mg"},
+  13:{name:"Aluminium", sym:"Al"},
+  14:{name:"Silicium", sym:"Si"},
+  15:{name:"Phosphor", sym:"P"},
+  16:{name:"Schwefel", sym:"S"},
+  17:{name:"Chlor", sym:"Cl"},
+  18:{name:"Argon", sym:"Ar"},
+  19:{name:"Kalium", sym:"K"},
+  20:{name:"Calcium", sym:"Ca"},
+  26:{name:"Eisen", sym:"Fe"},
+  29:{name:"Kupfer", sym:"Cu"},
+  30:{name:"Zink", sym:"Zn"},
+  35:{name:"Brom", sym:"Br"},
+  47:{name:"Silber", sym:"Ag"},
+  54:{name:"Xenon", sym:"Xe"}
 };
 
-const TASKS1=[
-{Z:11,e:11},{Z:11,e:10},{Z:8,e:10}
+function labelOf(Z, charge){
+  const el = ELEMENT[Z];
+  const base = el ? `${el.name} (${el.sym})` : `Element Z=${Z}`;
+  if (charge === 0) return `${base} – neutrales Atom`;
+  const sign = charge > 0 ? "+" : "−";
+  const mag = Math.abs(charge);
+  const ch = mag === 1 ? sign : `${mag}${sign}`;
+  return `${base}${el ? ` ${el.sym}${ch}` : ` Ion (${ch})`} – Ion`;
+}
+
+/* ---------------------- Aufgabenpools (>=20 je Level) ---------------------- */
+
+/*
+  Task schema:
+  {Z, e, kind, prompt, correct, options? ...}
+*/
+
+// Level 1: Multiple Choice (mind. 20)
+const LEVEL1_TASKS = [
+  {Z:2, e:2},
+  {Z:3, e:2},   // Li+
+  {Z:4, e:2},   // Be2+
+  {Z:8, e:8},
+  {Z:8, e:10},  // O2-
+  {Z:7, e:10},  // N3-
+  {Z:11, e:11},
+  {Z:11, e:10}, // Na+
+  {Z:12, e:10}, // Mg2+
+  {Z:13, e:10}, // Al3+
+  {Z:17, e:17},
+  {Z:17, e:18}, // Cl-
+  {Z:10, e:10},
+  {Z:19, e:18}, // K+
+  {Z:20, e:18}, // Ca2+
+  {Z:16, e:18}, // S2-
+  {Z:9, e:10},  // F-
+  {Z:5, e:2},   // B3+
+  {Z:6, e:6},
+  {Z:14, e:14},
+  // +2 extra (21,22) for safety
+  {Z:18, e:18},
+  {Z:15, e:18}  // P3-
 ];
-const TASKS2=[
-{Z:11,e:11},{Z:11,e:10},{Z:8,e:10}
+
+// Level 2: Ion oder nicht? (mind. 20)
+const LEVEL2_TASKS = [
+  {Z:10, e:10}, // neutral
+  {Z:11, e:10}, // +
+  {Z:8, e:10},  // -
+  {Z:12, e:10}, // +
+  {Z:17, e:18}, // -
+  {Z:2, e:2},   // neutral
+  {Z:19, e:18}, // +
+  {Z:20, e:18}, // +
+  {Z:7, e:10},  // -
+  {Z:9, e:10},  // -
+  {Z:18, e:18}, // neutral
+  {Z:13, e:10}, // +
+  {Z:16, e:18}, // -
+  {Z:3, e:2},   // +
+  {Z:4, e:2},   // +
+  {Z:6, e:6},   // neutral
+  {Z:14, e:14}, // neutral
+  {Z:15, e:15}, // neutral
+  {Z:12, e:12}, // neutral
+  {Z:17, e:17}, // neutral
+  // extras
+  {Z:11, e:11}, // neutral
+  {Z:8, e:8}    // neutral
 ];
 
-/* ================== ATOM ================== */
-function renderAtom(Z,e){
-const v=document.getElementById("atomVisual");
-v.querySelectorAll(".shell,.electron,.proton-dot").forEach(x=>x.remove());
-const cx=140,cy=140;
+// Level 3: Fehlerdetektiv (mind. 20)
+// Jede Aufgabe zeigt ein Teilchen (Z,e) und eine Behauptung.
+// correctTrue: ob die Behauptung stimmt. Wenn falsch: reasons[] (subset of keys).
+const LEVEL3_TASKS = [
+  // richtige Aussagen
+  {Z:12,e:10, claimZ:12, claimE:10, claimText:"Das dargestellte Teilchen ist ein Magnesium-Ion Mg²⁺.", correctTrue:true},
+  {Z:8,e:10,  claimZ:8,  claimE:10, claimText:"Das dargestellte Teilchen ist ein Sauerstoff-Ion O²⁻.", correctTrue:true},
+  {Z:11,e:10, claimZ:11, claimE:10, claimText:"Das dargestellte Teilchen ist ein Natrium-Ion Na⁺.", correctTrue:true},
+  {Z:17,e:18, claimZ:17, claimE:18, claimText:"Das dargestellte Teilchen ist ein Chlorid-Ion Cl⁻.", correctTrue:true},
+  {Z:10,e:10, claimZ:10, claimE:10, claimText:"Das dargestellte Teilchen ist ein neutrales Neon-Atom.", correctTrue:true},
+  {Z:20,e:18, claimZ:20, claimE:18, claimText:"Das dargestellte Teilchen ist ein Calcium-Ion Ca²⁺.", correctTrue:true},
+  {Z:19,e:18, claimZ:19, claimE:18, claimText:"Das dargestellte Teilchen ist ein Kalium-Ion K⁺.", correctTrue:true},
+  {Z:16,e:18, claimZ:16, claimE:18, claimText:"Das dargestellte Teilchen ist ein Sulfid-Ion S²⁻.", correctTrue:true},
+  {Z:3,e:2,   claimZ:3,  claimE:2,  claimText:"Das dargestellte Teilchen ist ein Lithium-Ion Li⁺.", correctTrue:true},
+  {Z:4,e:2,   claimZ:4,  claimE:2,  claimText:"Das dargestellte Teilchen ist ein Beryllium-Ion Be²⁺.", correctTrue:true},
 
-/* shells + electrons */
-const shells=[60,100];
-let rem=e;
-shells.forEach(r=>{
-const s=document.createElement("div");
-s.className="shell";
-s.style.width=s.style.height=(2*r)+"px";
-s.style.left=(cx-r)+"px";
-s.style.top=(cy-r)+"px";
-v.appendChild(s);
-const n=Math.min(rem,8); rem-=n;
-for(let i=0;i<n;i++){
-const a=2*Math.PI*i/n;
-const el=document.createElement("div");
-el.className="electron";
-el.style.left=(cx+r*Math.cos(a))+"px";
-el.style.top=(cy+r*Math.sin(a))+"px";
-v.appendChild(el);
+  // falsche Aussagen (mit typischen Fehlern)
+  {Z:11,e:11, claimZ:11, claimE:10, claimText:"Das dargestellte Teilchen ist ein Natrium-Ion Na⁺.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:17,e:17, claimZ:17, claimE:18, claimText:"Das dargestellte Teilchen ist ein Chlorid-Ion Cl⁻.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:12,e:12, claimZ:12, claimE:10, claimText:"Das dargestellte Teilchen ist ein Magnesium-Ion Mg²⁺.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:8,e:8,   claimZ:8,  claimE:10, claimText:"Das dargestellte Teilchen ist ein Sauerstoff-Ion O²⁻.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:10,e:10, claimZ:18, claimE:18, claimText:"Das dargestellte Teilchen ist ein neutrales Argon-Atom.", correctTrue:false, reasons:["rProtons","rElement"]},
+  {Z:20,e:18, claimZ:19, claimE:18, claimText:"Das dargestellte Teilchen ist ein Kalium-Ion K⁺.", correctTrue:false, reasons:["rProtons","rElement"]},
+  {Z:7,e:10,  claimZ:8,  claimE:10, claimText:"Das dargestellte Teilchen ist ein Sauerstoff-Ion O²⁻.", correctTrue:false, reasons:["rProtons","rElement"]},
+  {Z:16,e:18, claimZ:16, claimE:16, claimText:"Das dargestellte Teilchen ist ein neutrales Schwefel-Atom.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:13,e:10, claimZ:13, claimE:13, claimText:"Das dargestellte Teilchen ist ein neutrales Aluminium-Atom.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:19,e:18, claimZ:19, claimE:19, claimText:"Das dargestellte Teilchen ist ein neutrales Kalium-Atom.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+
+  // +2 extras
+  {Z:9,e:10,  claimZ:9,  claimE:9,  claimText:"Das dargestellte Teilchen ist ein neutrales Fluor-Atom.", correctTrue:false, reasons:["rElectrons","rCharge"]},
+  {Z:2,e:2,   claimZ:2,  claimE:0,  claimText:"Das dargestellte Teilchen ist ein Helium-Ion He²⁺.", correctTrue:false, reasons:["rElectrons","rCharge"]}
+];
+
+/* ---------------------- Spielzustand ---------------------- */
+
+const state = {
+  level: 1,
+  tasks: [],
+  index: 0,
+  score: 0,
+  streak: 0,
+  locked: false,
+
+  // current particle shown
+  Z: 0,
+  e: 0,
+
+  // Level2 input
+  l2_step: 0, // 0 pick atom/ion; 1 pick sign if ion; - done
+  l2_choiceAtomIon: null, // "atom" | "ion"
+  l2_choiceSign: null, // "pos" | "neg" | null
+  timer: 15,
+  timerId: null
+};
+
+/* ---------------------- DOM ---------------------- */
+
+const tab1 = document.getElementById("tab1");
+const tab2 = document.getElementById("tab2");
+const tab3 = document.getElementById("tab3");
+
+const levelName = document.getElementById("levelName");
+const taskIndex = document.getElementById("taskIndex");
+const taskTotal = document.getElementById("taskTotal");
+const scoreEl = document.getElementById("score");
+const streakEl = document.getElementById("streak");
+const feedback = document.getElementById("feedback");
+
+const questionText = document.getElementById("questionText");
+const mcqButtons = document.getElementById("mcqButtons");
+
+const level1Area = document.getElementById("level1Area");
+const level2Area = document.getElementById("level2Area");
+const level3Area = document.getElementById("level3Area");
+
+const nextBtn = document.getElementById("next");
+const restartBtn = document.getElementById("restart");
+
+const atomArea = document.getElementById("atomArea");
+const atomVisual = document.getElementById("atomVisual");
+
+const pCount = document.getElementById("pCount");
+const eCount = document.getElementById("eCount");
+const cCount = document.getElementById("cCount");
+
+const chargeStat = document.getElementById("chargeStat");
+const pStat = document.getElementById("pStat");
+const eStat = document.getElementById("eStat");
+
+const timerPill = document.getElementById("timerPill");
+const timerEl = document.getElementById("timer");
+
+const l2Atom = document.getElementById("l2Atom");
+const l2Ion = document.getElementById("l2Ion");
+const l2Pos = document.getElementById("l2Pos");
+const l2Neg = document.getElementById("l2Neg");
+
+const l3True = document.getElementById("l3True");
+const l3False = document.getElementById("l3False");
+const l3Check = document.getElementById("l3Check");
+const l3Skip = document.getElementById("l3Skip");
+const reasonBox = document.getElementById("reasonBox");
+const rProtons = document.getElementById("rProtons");
+const rElectrons = document.getElementById("rElectrons");
+const rElement = document.getElementById("rElement");
+const rCharge = document.getElementById("rCharge");
+
+/* ---------------------- Utilities ---------------------- */
+
+function chargeOf(Z, e){ return Z - e; }
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
-});
-
-/* protons */
-for(let i=0;i<Math.min(Z,12);i++){
-const a=2*Math.PI*i/Math.min(Z,12);
-const p=document.createElement("div");
-p.className="proton-dot";
-p.style.left=(cx+25*Math.cos(a))+"px";
-p.style.top=(cy+25*Math.sin(a))+"px";
-v.appendChild(p);
+function setFeedbackOk(msg){
+  feedback.textContent = msg;
+  feedback.classList.remove("err");
+  feedback.classList.add("ok");
+}
+function setFeedbackErr(msg){
+  feedback.textContent = msg;
+  feedback.classList.remove("ok");
+  feedback.classList.add("err");
+}
+function clearFeedback(){
+  feedback.textContent = "";
+  feedback.classList.remove("ok","err");
 }
 
-pCount.textContent=Z;
-eCount.textContent=e;
-cCount.textContent=Z-e;
+function setTabs(active){
+  [tab1,tab2,tab3].forEach(t=>t.classList.remove("active"));
+  if(active===1) tab1.classList.add("active");
+  if(active===2) tab2.classList.add("active");
+  if(active===3) tab3.classList.add("active");
 }
 
-/* ================== TIMER ================== */
+/* ---------------------- Atom rendering ---------------------- */
+
+function renderAtom(Z, e){
+  // remove old shells/electrons/protons
+  atomVisual.querySelectorAll(".shell, .electron, .proton-dot").forEach(x=>x.remove());
+
+  const centerX = 140;
+  const centerY = 140;
+  const shellR = [60, 98, 135];     // 3 shells
+  const shellCap = [2, 8, 8];       // simplified
+
+  // shells + electrons
+  let rem = e;
+  for(let i=0;i<3;i++){
+    const r = shellR[i];
+    const shell = document.createElement("div");
+    shell.className = "shell";
+    shell.style.width = (2*r) + "px";
+    shell.style.height = (2*r) + "px";
+    shell.style.left = (centerX - r) + "px";
+    shell.style.top = (centerY - r) + "px";
+    atomVisual.appendChild(shell);
+
+    const n = Math.min(rem, shellCap[i]);
+    rem -= n;
+
+    for(let j=0;j<n;j++){
+      const angle = (2*Math.PI*j)/(n||1);
+      const ex = centerX + r*Math.cos(angle);
+      const ey = centerY + r*Math.sin(angle);
+      const el = document.createElement("div");
+      el.className = "electron";
+      el.style.left = ex + "px";
+      el.style.top = ey + "px";
+      atomVisual.appendChild(el);
+    }
+  }
+
+  // protons in nucleus: up to 16 dots on 2 rings
+  const maxVisible = 16;
+  const visible = Math.min(Z, maxVisible);
+  const innerR = 15;
+  const outerR = 28;
+
+  if(visible > 0){
+    if(visible <= 8){
+      for(let j=0;j<visible;j++){
+        const angle = (2*Math.PI*j)/visible;
+        const px = centerX + outerR*Math.cos(angle);
+        const py = centerY + outerR*Math.sin(angle);
+        const p = document.createElement("div");
+        p.className = "proton-dot";
+        p.style.left = px + "px";
+        p.style.top = py + "px";
+        atomVisual.appendChild(p);
+      }
+    }else{
+      const innerCount = 8;
+      const outerCount = visible - innerCount;
+
+      for(let j=0;j<innerCount;j++){
+        const angle = (2*Math.PI*j)/innerCount;
+        const px = centerX + innerR*Math.cos(angle);
+        const py = centerY + innerR*Math.sin(angle);
+        const p = document.createElement("div");
+        p.className = "proton-dot";
+        p.style.left = px + "px";
+        p.style.top = py + "px";
+        atomVisual.appendChild(p);
+      }
+      for(let j=0;j<outerCount;j++){
+        const angle = (2*Math.PI*j)/outerCount;
+        const px = centerX + outerR*Math.cos(angle);
+        const py = centerY + outerR*Math.sin(angle);
+        const p = document.createElement("div");
+        p.className = "proton-dot";
+        p.style.left = px + "px";
+        p.style.top = py + "px";
+        atomVisual.appendChild(p);
+      }
+    }
+  }
+
+  // numbers
+  const c = chargeOf(Z,e);
+  pCount.textContent = Z;
+  eCount.textContent = e;
+  cCount.textContent = c;
+
+  chargeStat.textContent = c;
+  pStat.textContent = Z;
+  eStat.textContent = e;
+}
+
+/* ---------------------- Level switching ---------------------- */
+
+function stopTimer(){
+  if(state.timerId){ clearInterval(state.timerId); state.timerId=null; }
+}
 function startTimer(){
-clearInterval(state.timerId);
-state.timer=15;
-timer.textContent=state.timer;
-state.timerId=setInterval(()=>{
-state.timer--;
-timer.textContent=state.timer;
-if(state.timer<=0){
-clearInterval(state.timerId);
-state.locked=true;
-feedback.textContent="Zeit abgelaufen";
-}
-},1000);
+  stopTimer();
+  state.timer = 15;
+  timerEl.textContent = state.timer;
+  state.timerId = setInterval(()=>{
+    state.timer--;
+    timerEl.textContent = state.timer;
+    if(state.timer <= 0){
+      stopTimer();
+      if(!state.locked){
+        state.locked = true;
+        state.streak = 0;
+        streakEl.textContent = state.streak;
+        setFeedbackErr("Zeit abgelaufen ⏱️ – kein Punkt. Nächste Aufgabe.");
+        nextBtn.disabled = false;
+      }
+    }
+  }, 1000);
 }
 
-/* ================== LEVELS ================== */
-function loadTask(){
-state.locked=false;
-feedback.textContent="";
-document.getElementById("rightCard").classList.toggle("hide-numbers",state.level===2);
+function loadLevel(level){
+  state.level = level;
+  state.index = 0;
+  state.locked = false;
+  state.l2_step = 0;
+  state.l2_choiceAtomIon = null;
+  state.l2_choiceSign = null;
 
-if(state.level===1){
-const t=TASKS1[state.index%TASKS1.length];
-state.Z=t.Z;state.e=t.e;
-questionText.textContent="Was siehst du?";
-level1Area.innerHTML="";
-["Atom","Ion"].forEach(ans=>{
-const b=document.createElement("button");
-b.textContent=ans;
-b.onclick=()=>{if(!state.locked){feedback.textContent="OK";state.locked=true}};
-level1Area.appendChild(b);
+  clearFeedback();
+  stopTimer();
+
+  // visuals and areas
+  level1Area.style.display = (level===1) ? "block" : "none";
+  level2Area.style.display = (level===2) ? "block" : "none";
+  level3Area.style.display = (level===3) ? "block" : "none";
+  timerPill.style.display = (level===2) ? "inline-flex" : "none";
+
+  document.getElementById("rightCard").classList.toggle("hide-numbers", level===2);
+
+  setTabs(level);
+
+  if(level===1){
+    levelName.textContent = "Was bin ich?";
+    state.tasks = LEVEL1_TASKS.slice(0, 20); // mindestens 20
+  }else if(level===2){
+    levelName.textContent = "Ion oder nicht?";
+    state.tasks = LEVEL2_TASKS.slice(0, 20); // mindestens 20
+  }else{
+    levelName.textContent = "Fehlerdetektiv";
+    state.tasks = LEVEL3_TASKS.slice(0, 20); // mindestens 20 (hier sind es 20+)
+  }
+
+  taskTotal.textContent = state.tasks.length;
+  renderTask();
+}
+
+function renderTask(){
+  clearFeedback();
+  nextBtn.disabled = true;
+  state.locked = false;
+
+  // reset level-specific UI
+  mcqButtons.innerHTML = "";
+
+  // Level2 reset
+  if(state.level===2){
+    l2Atom.className = "secondary";
+    l2Ion.className = "secondary";
+    l2Pos.className = "secondary";
+    l2Neg.className = "secondary";
+    l2Pos.disabled = true;
+    l2Neg.disabled = true;
+    state.l2_step = 0;
+    state.l2_choiceAtomIon = null;
+    state.l2_choiceSign = null;
+    startTimer();
+  }
+
+  // Level3 reset
+  if(state.level===3){
+    l3True.className = "secondary";
+    l3False.className = "secondary";
+    l3Check.disabled = true;
+    reasonBox.style.display = "none";
+    rProtons.checked = false;
+    rElectrons.checked = false;
+    rElement.checked = false;
+    rCharge.checked = false;
+  }
+
+  const t = state.tasks[state.index];
+  taskIndex.textContent = state.index + 1;
+  scoreEl.textContent = state.score;
+  streakEl.textContent = state.streak;
+
+  if(state.level===1){
+    state.Z = t.Z; state.e = t.e;
+    renderAtom(state.Z, state.e);
+
+    const c = chargeOf(t.Z, t.e);
+    questionText.textContent = "Was wird dargestellt? Wähle die richtige Antwort.";
+    const correctLabel = labelOf(t.Z, c);
+
+    // Build distractors: same Z but different charge + some other element
+    const distractors = new Set();
+    // same element, wrong charge versions if possible
+    if(c === 0){
+      distractors.add(labelOf(t.Z, +1));
+      distractors.add(labelOf(t.Z, -1));
+    }else{
+      distractors.add(labelOf(t.Z, 0));
+      distractors.add(labelOf(t.Z, c>0 ? (c+1) : (c-1)));
+    }
+    // other element (same charge type)
+    const otherZ = [8,10,11,12,17,19,20,7,9,16,13,4,3,14,18].find(z=>z!==t.Z) || 10;
+    distractors.add(labelOf(otherZ, c));
+
+    const options = shuffle([correctLabel, ...Array.from(distractors)].slice(0,4));
+
+    options.forEach(opt=>{
+      const b = document.createElement("button");
+      b.className = "secondary";
+      b.textContent = opt;
+      b.addEventListener("click", ()=>handleLevel1Answer(opt, correctLabel));
+      mcqButtons.appendChild(b);
+    });
+
+  } else if(state.level===2){
+    state.Z = t.Z; state.e = t.e;
+    renderAtom(state.Z, state.e);
+    questionText.textContent = "Entscheide schnell: Atom (neutral) oder Ion? Falls Ion: positiv oder negativ.";
+  } else {
+    // Level3
+    state.Z = t.Z; state.e = t.e;
+    renderAtom(state.Z, state.e);
+    questionText.textContent = t.claimText;
+  }
+}
+
+function awardPoint(){
+  state.score++;
+  scoreEl.textContent = state.score;
+}
+function right(){
+  state.streak++;
+  streakEl.textContent = state.streak;
+}
+function wrong(){
+  state.streak = 0;
+  streakEl.textContent = state.streak;
+}
+
+/* ---------------------- Level 1 logic ---------------------- */
+
+function handleLevel1Answer(chosen, correct){
+  if(state.locked) return;
+  state.locked = true;
+  stopTimer();
+
+  if(chosen === correct){
+    awardPoint();
+    right();
+    setFeedbackOk("Richtig! +1 Punkt ✅");
+  }else{
+    wrong();
+    setFeedbackErr("Nicht ganz. Richtige Antwort: " + correct);
+  }
+  nextBtn.disabled = false;
+
+  // disable buttons
+  Array.from(mcqButtons.querySelectorAll("button")).forEach(b=>b.disabled=true);
+}
+
+/* ---------------------- Level 2 logic ---------------------- */
+
+function solveLevel2(){
+  if(state.locked) return;
+  const Z = state.Z, e = state.e;
+  const c = chargeOf(Z,e);
+
+  // expected
+  const expAtomIon = (c===0) ? "atom" : "ion";
+  const expSign = (c>0) ? "pos" : (c<0 ? "neg" : null);
+
+  const ok =
+    state.l2_choiceAtomIon === expAtomIon &&
+    (expAtomIon === "atom" ? true : (state.l2_choiceSign === expSign));
+
+  state.locked = true;
+  stopTimer();
+
+  if(ok){
+    awardPoint();
+    right();
+    setFeedbackOk("Richtig! +1 Punkt ✅");
+  }else{
+    wrong();
+    const expTxt = (c===0) ? "Atom (neutral)" : ("Ion (" + (c>0?"+":"−") + ")");
+    setFeedbackErr("Falsch. Erwartet: " + expTxt);
+  }
+
+  nextBtn.disabled = false;
+  l2Atom.disabled = true;
+  l2Ion.disabled = true;
+  l2Pos.disabled = true;
+  l2Neg.disabled = true;
+}
+
+l2Atom.addEventListener("click", ()=>{
+  if(state.level!==2 || state.locked) return;
+  state.l2_choiceAtomIon = "atom";
+  l2Atom.className = "good";
+  l2Ion.className = "secondary";
+  l2Pos.disabled = true;
+  l2Neg.disabled = true;
+  solveLevel2();
 });
+l2Ion.addEventListener("click", ()=>{
+  if(state.level!==2 || state.locked) return;
+  state.l2_choiceAtomIon = "ion";
+  l2Ion.className = "good";
+  l2Atom.className = "secondary";
+  l2Pos.disabled = false;
+  l2Neg.disabled = false;
+});
+l2Pos.addEventListener("click", ()=>{
+  if(state.level!==2 || state.locked) return;
+  state.l2_choiceSign = "pos";
+  l2Pos.className = "good";
+  l2Neg.className = "secondary";
+  solveLevel2();
+});
+l2Neg.addEventListener("click", ()=>{
+  if(state.level!==2 || state.locked) return;
+  state.l2_choiceSign = "neg";
+  l2Neg.className = "good";
+  l2Pos.className = "secondary";
+  solveLevel2();
+});
+
+/* ---------------------- Level 3 logic ---------------------- */
+
+let l3Choice = null; // "true"|"false"
+
+function l3Pick(choice){
+  if(state.level!==3 || state.locked) return;
+  l3Choice = choice;
+
+  l3True.className = (choice==="true") ? "good" : "secondary";
+  l3False.className = (choice==="false") ? "bad" : "secondary";
+
+  // show reasons if false
+  if(choice==="false"){
+    reasonBox.style.display = "block";
+  }else{
+    reasonBox.style.display = "none";
+    rProtons.checked = false;
+    rElectrons.checked = false;
+    rElement.checked = false;
+    rCharge.checked = false;
+  }
+
+  l3Check.disabled = false;
 }
 
-if(state.level===2){
-const t=TASKS2[state.index%TASKS2.length];
-state.Z=t.Z;state.e=t.e;
-questionText.textContent="Atom oder Ion?";
-l2Atom.disabled=false;
-l2Ion.disabled=false;
-l2Pos.disabled=true;
-l2Neg.disabled=true;
-startTimer();
+l3True.addEventListener("click", ()=>l3Pick("true"));
+l3False.addEventListener("click", ()=>l3Pick("false"));
+
+function getCheckedReasons(){
+  const out = [];
+  if(rProtons.checked) out.push("rProtons");
+  if(rElectrons.checked) out.push("rElectrons");
+  if(rElement.checked) out.push("rElement");
+  if(rCharge.checked) out.push("rCharge");
+  return out;
 }
 
-renderAtom(state.Z,state.e);
+l3Check.addEventListener("click", ()=>{
+  if(state.level!==3 || state.locked) return;
+  const t = state.tasks[state.index];
+
+  const chosenTrue = (l3Choice==="true");
+  const expectedTrue = t.correctTrue === true;
+
+  let ok = false;
+
+  if(expectedTrue){
+    // must choose "true"
+    ok = chosenTrue;
+  }else{
+    // must choose "false" AND reasons match
+    if(!chosenTrue){
+      const chosenReasons = getCheckedReasons().sort().join(",");
+      const expectedReasons = (t.reasons || []).slice().sort().join(",");
+      ok = (chosenReasons === expectedReasons);
+    }else{
+      ok = false;
+    }
+  }
+
+  state.locked = true;
+
+  if(ok){
+    awardPoint();
+    right();
+    if(!expectedTrue){
+      setFeedbackOk("Richtig erkannt + korrekt begründet! +1 Punkt ✅");
+    }else{
+      setFeedbackOk("Richtig! +1 Punkt ✅");
+    }
+  }else{
+    wrong();
+    if(expectedTrue){
+      setFeedbackErr("Falsch. Hier stimmt die Aussage.");
+    }else{
+      const exp = (t.reasons || []).map(r=>{
+        if(r==="rProtons") return "falsche Protonenzahl";
+        if(r==="rElectrons") return "falsche Elektronenzahl";
+        if(r==="rElement") return "falsches Element";
+        if(r==="rCharge") return "falsche Ladung";
+        return r;
+      }).join(", ");
+      setFeedbackErr("Nicht ganz. Erwartet: „stimmt nicht“ + Gründe: " + exp);
+    }
+  }
+
+  nextBtn.disabled = false;
+  l3True.disabled = true;
+  l3False.disabled = true;
+  l3Check.disabled = true;
+});
+
+l3Skip.addEventListener("click", ()=>{
+  if(state.level!==3 || state.locked) return;
+  state.locked = true;
+  wrong();
+  setFeedbackErr("Übersprungen – kein Punkt.");
+  nextBtn.disabled = false;
+});
+
+/* ---------------------- Navigation ---------------------- */
+
+function nextTask(){
+  stopTimer();
+  if(state.index < state.tasks.length - 1){
+    state.index++;
+    // re-enable L3 buttons
+    l3True.disabled = false; l3False.disabled = false;
+    renderTask();
+  }else{
+    // finished level
+    state.locked = true;
+    nextBtn.disabled = true;
+    setFeedbackOk(`Level abgeschlossen! Punkte: ${state.score} ✅ (Serie endet bei: ${state.streak})`);
+  }
 }
 
-/* ================== EVENTS ================== */
-tab1.onclick=()=>{state.level=1;tab1.classList.add("active");tab2.classList.remove("active");loadTask()};
-tab2.onclick=()=>{state.level=2;tab2.classList.add("active");tab1.classList.remove("active");loadTask()};
+nextBtn.addEventListener("click", ()=>{
+  if(nextBtn.disabled) return;
+  nextTask();
+});
 
-l2Atom.onclick=()=>{if(!state.locked){feedback.textContent="Atom gewählt";state.locked=true;clearInterval(state.timerId)}};
-l2Ion.onclick=()=>{l2Pos.disabled=false;l2Neg.disabled=false};
-l2Pos.onclick=()=>{if(!state.locked){feedback.textContent="Ion +";state.locked=true;clearInterval(state.timerId)}};
-l2Neg.onclick=()=>{if(!state.locked){feedback.textContent="Ion −";state.locked=true;clearInterval(state.timerId)}};
+restartBtn.addEventListener("click", ()=>{
+  stopTimer();
+  state.index = 0;
+  state.locked = false;
+  state.streak = 0;
+  clearFeedback();
+  renderTask();
+});
 
-next.onclick=()=>{state.index++;loadTask()};
+tab1.addEventListener("click", ()=>loadLevel(1));
+tab2.addEventListener("click", ()=>loadLevel(2));
+tab3.addEventListener("click", ()=>loadLevel(3));
 
-loadTask();
+/* ---------------------- Start ---------------------- */
+loadLevel(1);
 </script>
 </body>
 </html>
-
