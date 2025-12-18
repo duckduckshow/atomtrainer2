@@ -697,18 +697,23 @@ function renderTask(){
   mcqButtons.innerHTML = "";
 
   // Level2 reset
-  if(state.level===2){
-    l2Atom.className = "secondary";
-    l2Ion.className = "secondary";
-    l2Pos.className = "secondary";
-    l2Neg.className = "secondary";
-    l2Pos.disabled = true;
-    l2Neg.disabled = true;
-    state.l2_step = 0;
-    state.l2_choiceAtomIon = null;
-    state.l2_choiceSign = null;
-    startTimer();
-  }
+if(state.level===2){
+  l2Atom.className = "secondary";
+  l2Ion.className = "secondary";
+  l2Pos.className = "secondary";
+  l2Neg.className = "secondary";
+
+  l2Atom.disabled = false;   // <- HINZUFÜGEN
+  l2Ion.disabled = false;    // <- HINZUFÜGEN
+
+  l2Pos.disabled = true;
+  l2Neg.disabled = true;
+  state.l2_step = 0;
+  state.l2_choiceAtomIon = null;
+  state.l2_choiceSign = null;
+  startTimer();
+}
+
 
   // Level3 reset
   if(state.level===3){
