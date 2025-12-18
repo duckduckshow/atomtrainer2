@@ -981,10 +981,13 @@ l3Skip.addEventListener("click", ()=>{
 
 function nextTask(){
   stopTimer();
+  state.locked = false;   // ⭐ ENTSCHEIDEND ⭐
+
   if(state.index < state.tasks.length - 1){
     state.index++;
     // re-enable L3 buttons
-    l3True.disabled = false; l3False.disabled = false;
+    l3True.disabled = false; 
+    l3False.disabled = false;
     renderTask();
   }else{
     // finished level
